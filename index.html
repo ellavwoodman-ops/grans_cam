@@ -8,6 +8,57 @@
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* POPUP */
+.popup-overlay {
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.45);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+}
+.popup-overlay.hidden { display: none; }
+.popup-box {
+  background: #fff;
+  max-width: 580px; width: 100%;
+  padding: 52px 48px;
+  position: relative;
+}
+.popup-label {
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: #999; margin-bottom: 20px;
+}
+.popup-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px; font-weight: 400; font-style: italic;
+  line-height: 1.2; color: #111;
+  margin-bottom: 28px;
+}
+.popup-body {
+  display: flex; flex-direction: column; gap: 16px;
+}
+.popup-body p {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px; font-weight: 400;
+  line-height: 1.8; color: #555;
+}
+.popup-close {
+  margin-top: 36px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  background: #111; color: #fff;
+  border: none; padding: 12px 32px;
+  cursor: pointer; transition: opacity 0.2s;
+}
+.popup-close:hover { opacity: 0.75; }
+.popup-x {
+  position: absolute; top: 20px; right: 24px;
+  background: none; border: none;
+  font-size: 18px; color: #aaa;
+  cursor: pointer; line-height: 1;
+}
+.popup-x:hover { color: #111; }
+
 body {
   font-family: 'Inter', sans-serif;
   font-weight: 400;
@@ -646,7 +697,27 @@ footer {
 </div><!-- /page-ella -->
 
 
+<!-- POPUP -->
+<div id="popup" class="popup-overlay">
+  <div class="popup-box">
+    <button class="popup-x" onclick="closePopup()">✕</button>
+    <div class="popup-label">About this archive</div>
+    <div class="popup-title">Grandma Val</div>
+    <div class="popup-body">
+      <p>Grandma Val was a traveller, an adventurer, and an explorer.</p>
+      <p>In July 2025, I built this website for my cousin Willem and Sally as a simple way to share photographs from our travels overseas. We use a collection of Grandma Val's old film cameras, and whenever we meet, we swap cameras before heading off on our next adventures.</p>
+      <p>Grandma Val lives in Cohuna, Australia. The website was designed with her in mind. The text is large and easy to read, and each camera is tracked so she can follow which grandchild is using it and where in the world it has travelled. For us, the cameras are a way of staying connected. For her, they are a window into our lives and the places we visit.</p>
+      <p>We know it brings her a great deal of joy to see the cameras continue their journeys and to share in the stories they capture.</p>
+    </div>
+    <button class="popup-close" onclick="closePopup()">Enter Archive →</button>
+  </div>
+</div>
+
 <script>
+  function closePopup() {
+    document.getElementById('popup').classList.add('hidden');
+  }
+
   const PASSWORDS = { sally: 'sally2024', willem: 'willem2024' };
   const isUnlocked = { sally: false, willem: false };
 
