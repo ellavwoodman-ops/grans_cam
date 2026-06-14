@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Film Archive</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  background: #fff;
+  color: #111;
+  min-height: 100vh;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: 48px;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  padding: 0 32px;
+  gap: 0;
+  z-index: 1000;
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
+  color: #111;
+  margin-right: 40px;
+  white-space: nowrap;
+}
+.nav-tabs { display: flex; gap: 0; }
+.nav-tab {
+  background: none; border: none;
+  color: #777;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px; font-weight: 400;
+  padding: 0 16px;
+  height: 48px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  display: flex; align-items: center;
+  margin-top: 1px;
+}
+.nav-tab:hover { color: #111; }
+.nav-tab.active {
+  color: #111;
+  border-bottom-color: #111;
+  font-weight: 500;
+}
+
+/* ── PAGES ── */
+.page { display: none; padding-top: 48px; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ── PASSWORD GATE ── */
+.gate {
+  position: fixed; inset: 0; top: 48px;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500;
+}
+.gate.hidden { display: none; }
+
+.gate-box {
+  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 20px;
+  width: 100%; max-width: 400px;
+  padding: 40px 20px;
+}
+
+.gate-person-name {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(64px, 16vw, 140px);
+  color: #111;
+  line-height: 1;
+}
+
+.gate-subtitle {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  margin-top: -8px;
+}
+
+.gate-divider {
+  width: 32px; height: 1px;
+  background: #ddd;
+}
+
+.gate-input {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  text-align: center;
+  background: transparent;
+  border: 1px solid #ccc;
+  padding: 10px 20px;
+  width: 220px;
+  outline: none;
+  color: #111;
+  transition: border-color 0.2s;
+}
+.gate-input:focus { border-color: #111; }
+.gate-input::placeholder { color: #bbb; }
+
+.gate-btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px; font-weight: 500;
+  letter-spacing: 0.08em;
+  background: #111; color: #fff;
+  border: none; padding: 10px 32px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.gate-btn:hover { opacity: 0.7; }
+
+.gate-error {
+  font-size: 12px;
+  color: #c00; opacity: 0;
+  transition: opacity 0.3s;
+  min-height: 16px;
+}
+.gate-error.show { opacity: 1; }
+
+/* ── PAGE HEADER ── */
+.page-title-bar {
+  padding: 48px 32px 28px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.page-title-bar h1 {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 1.1;
+  color: #111;
+}
+.page-title-bar .meta {
+  font-size: 12px;
+  font-weight: 400;
+  color: #999;
+  text-align: right;
+  line-height: 1.8;
+}
+
+/* ── CAMERA FOLDERS ── */
+.camera-folder {
+  border-bottom: 1px solid #ddd;
+}
+
+.camera-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  gap: 20px;
+  transition: background 0.12s;
+}
+.camera-header:hover { background: #fafafa; }
+.camera-folder.open .camera-header { background: #fafafa; }
+
+.cam-left { display: flex; align-items: center; gap: 20px; min-width: 0; }
+.cam-num {
+  font-size: 11px; font-weight: 400;
+  color: #bbb; flex-shrink: 0;
+}
+.cam-name {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(15px, 2vw, 20px);
+  font-style: italic;
+  font-weight: 400;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cam-right { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
+.cam-count {
+  font-size: 11px; font-weight: 400;
+  color: #bbb;
+}
+.cam-arrow {
+  font-size: 9px; color: #bbb;
+  transition: transform 0.3s;
+}
+.camera-folder.open .cam-arrow { transform: rotate(180deg); }
+
+/* Folder body */
+.camera-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.5s ease;
+}
+.camera-folder.open .camera-body { max-height: 6000px; }
+
+/* Photo grid */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  padding: 0;
+  background: #eee;
+}
+.photo-grid.two-col { grid-template-columns: repeat(2, 1fr); }
+
+.photo-cell {
+  aspect-ratio: 3/2;
+  overflow: hidden;
+  background: #f5f5f5;
+  position: relative;
+}
+.photo-cell img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 4s ease;
+}
+.photo-cell:hover img { transform: scale(1.04); }
+
+/* Roll label */
+.canon-roll-label {
+  padding: 10px 32px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: #999;
+}
+
+/* Coming soon cell */
+.photo-cell.empty {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 8px; background: #f9f9f9;
+}
+.empty-plus {
+  font-size: 20px; font-weight: 200;
+  color: #ccc;
+}
+.empty-text {
+  font-size: 10px; font-weight: 400;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: #ccc;
+}
+
+/* Caption bar */
+.camera-caption {
+  padding: 12px 32px;
+  background: #fff;
+  border-top: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.caption-text { font-size: 11px; color: #aaa; }
+.caption-tag {
+  font-size: 11px; font-weight: 400;
+  color: #999;
+}
+
+/* ── UNLOCKED person page ── */
+.person-content { display: none; }
+.person-content.unlocked { display: block; }
+
+.person-landed {
+  min-height: calc(100vh - 52px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center; padding: 60px 40px;
+  border-bottom: 1.5px solid #111;
+}
+.person-landed-name {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(60px, 15vw, 130px);
+  color: #111; line-height: 1;
+}
+.person-landed-sub {
+  font-size: 12px; font-weight: 400;
+  color: #999; margin-top: 12px;
+}
+
+/* FOLDER ESSAY */
+.folder-essay {
+  padding: 56px 40px 64px;
+  border-top: 1px solid #e4e4e4;
+  background: #fff;
+}
+.folder-essay-inner {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 64px;
+  align-items: start;
+  max-width: 1100px;
+}
+.folder-essay-left {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.folder-essay-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-style: italic;
+  font-size: clamp(24px, 3vw, 36px);
+  line-height: 1.2;
+  color: #111;
+}
+.folder-essay-camera {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #999;
+}
+.essay-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.essay-body p {
+  font-family: 'Playfair Display', serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.85;
+  color: #444;
+}
+
+@media (max-width: 700px) {
+  .folder-essay {
+    padding: 36px 20px 44px;
+  }
+  .folder-essay-inner {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+/* FOOTER */
+footer {
+  border-top: 1px solid #ddd;
+  padding: 16px 32px;
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 8px;
+}
+.footer-l { font-size: 11px; color: #bbb; }
+.footer-r {
+  font-family: 'Playfair Display', serif;
+  font-style: italic; font-size: 12px; color: #bbb;
+}
+
+@media (max-width: 600px) {
+  nav { padding: 0 16px; }
+  .page-title-bar { padding: 28px 16px 20px; }
+  .page-title-bar .meta { text-align: left; }
+  .camera-header { padding: 16px; }
+  .cam-name { font-size: 14px; }
+  .photo-grid { grid-template-columns: repeat(2, 1fr); }
+  footer { padding: 14px 16px; }
+  .camera-caption { padding: 10px 16px; }
+  .canon-roll-label { padding: 8px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Film Archive</div>
+  <div class="nav-tabs">
+    <button class="nav-tab" onclick="showPage('sally')">🔒 Sally</button>
+    <button class="nav-tab" onclick="showPage('willem')">🔒 Willem</button>
+    <button class="nav-tab active" onclick="showPage('ella')">Ella</button>
+  </div>
+</nav>
+
+<!-- ═══ SALLY ═══ -->
+<div id="page-sally" class="page">
+  <div id="gate-sally" class="gate">
+    <div class="gate-box">
+      <div class="gate-person-name">Sally</div>
+      <div class="gate-subtitle">Private archive — password required</div>
+      <div class="gate-divider"></div>
+      <input id="pw-sally" class="gate-input" type="password" placeholder="Enter password"
+             onkeydown="if(event.key==='Enter') unlock('sally')">
+      <button class="gate-btn" onclick="unlock('sally')">Enter →</button>
+      <div id="err-sally" class="gate-error">Incorrect password, try again</div>
+    </div>
+  </div>
+  <div id="cnt-sally" class="person-content">
+    <div class="person-landed">
+      <div class="person-landed-name">Sally</div>
+      <div class="person-landed-sub">Film Archive — Photos coming soon</div>
+    </div>
+    <footer>
+      <span class="footer-l">Film Archive · Sally</span>
+      <span class="footer-r">35mm</span>
+    </footer>
+  </div>
+</div>
+
+<!-- ═══ WILLEM ═══ -->
+<div id="page-willem" class="page">
+  <div id="gate-willem" class="gate">
+    <div class="gate-box">
+      <div class="gate-person-name">Willem</div>
+      <div class="gate-subtitle">Private archive — password required</div>
+      <div class="gate-divider"></div>
+      <input id="pw-willem" class="gate-input" type="password" placeholder="Enter password"
+             onkeydown="if(event.key==='Enter') unlock('willem')">
+      <button class="gate-btn" onclick="unlock('willem')">Enter →</button>
+      <div id="err-willem" class="gate-error">Incorrect password, try again</div>
+    </div>
+  </div>
+  <div id="cnt-willem" class="person-content">
+    <div class="person-landed">
+      <div class="person-landed-name">Willem</div>
+      <div class="person-landed-sub">Film Archive — Photos coming soon</div>
+    </div>
+    <footer>
+      <span class="footer-l">Film Archive · Willem</span>
+      <span class="footer-r">35mm</span>
+    </footer>
+  </div>
+</div>
+
+<!-- ═══ ELLA ═══ -->
+<div id="page-ella" class="page active">
+
+  <div class="page-title-bar">
+    <h1>Ella's Collection</h1>
+    <div class="meta">
+      3 Cameras &nbsp;·&nbsp; 35mm + Digital<br>
+      Summer Archive
+    </div>
+  </div>
+
+  <div class="cameras">
+
+    <!-- CAMERA 1: PENTAX -->
+    <div class="camera-folder open" id="cam1">
+      <button class="camera-header" onclick="toggleCam('cam1')">
+        <div class="cam-left">
+          <span class="cam-num">01</span>
+          <span class="cam-name">Pentax PZ10 35MM SLR Film Camera Kit</span>
+        </div>
+        <div class="cam-right">
+          <span class="cam-count">3 photos</span>
+          <span class="cam-arrow">▼</span>
+        </div>
+      </button>
+      <div class="camera-body">
+        <div class="photo-grid">
+          <div class="photo-cell">
+            <img src="F1010031.JPG" alt="Sunset over the bay">
+          </div>
+          <div class="photo-cell">
+            <img src="IMG_0503.JPG" alt="Building with yellow awnings">
+          </div>
+          <div class="photo-cell">
+            <img src="IMG_0164.JPG" alt="Girl writing on music wall, Barcelona">
+          </div>
+        </div>
+        <div class="folder-essay">
+          <div class="folder-essay-inner">
+            <div class="folder-essay-left">
+              <div class="folder-essay-title">Catalan Coast<br>September 2025</div>
+              <div class="folder-essay-camera">Pentax PZ10 35MM SLR Film Camera Kit</div>
+            </div>
+            <div class="essay-body">
+              <p>Four days in Barcelona, tracing a small stretch of the Catalan coast.</p>
+              <p>Long afternoons unfolded between sun-warmed rock and sea, punctuated by sangria at dusk with the Melbourne girls. The beachfront still carried traces of another era, with weathered seventies shutters fading elegantly into the landscape. There was an ease to the place.</p>
+              <p>Unhurried, lightly sunburnt, and content in the company of the sea.</p>
+              <p>The Pentax rendered it all with surprising tenderness. Although, on closer inspection, a recurring finger did sneak into a couple of the frames.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMERA 2: CANON -->
+    <div class="camera-folder open" id="cam2">
+      <button class="camera-header" onclick="toggleCam('cam2')">
+        <div class="cam-left">
+          <span class="cam-num">02</span>
+          <span class="cam-name">Canon Sure Shot 35mm Point and Shoot Film Camera</span>
+        </div>
+        <div class="cam-right">
+          <span class="cam-count">3 photos</span>
+          <span class="cam-arrow">▼</span>
+        </div>
+      </button>
+      <div class="camera-body">
+        <div class="canon-roll-label">Northern Sydney · Jan 2026</div>
+        <div class="photo-grid">
+          <div class="photo-cell">
+            <img src="F1010027.JPG" alt="Friends on Northern Sydney beach">
+          </div>
+          <div class="photo-cell">
+            <img src="IMG_0782.JPG" alt="Two girls under pandanus tree">
+          </div>
+          <div class="photo-cell">
+            <img src="F1010026.JPG" alt="Girl on beach with lighthouse headland">
+          </div>
+        </div>
+        <div class="folder-essay">
+          <div class="folder-essay-inner">
+            <div class="folder-essay-left">
+              <div class="folder-essay-title">Mackerel,<br>Palm Beach 2026</div>
+              <div class="folder-essay-camera">Canon Sure Shot 35mm Point and Shoot</div>
+            </div>
+            <div class="essay-body">
+              <p>Exploring the NSW coast close to home.</p>
+              <p>Small road trips along familiar roads. Fresh fish cooked on camp stoves by the beach. Salt in the air and long afternoons spent following the coastline. The kind of holiday that asks very little and feels part of my identity. The Canon Sure captures some precious shots.</p>
+              <p>A reminder that some of the most precious journeys are the ones closest to home.</p>
+            </div>
+          </div>
+        </div>
+        <div class="camera-caption">
+          <span class="caption-text">Northern Sydney · January 2026 · 35mm film</span>
+          <span class="caption-tag">Canon Sure Shot</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENTAX: SRI LANKA -->
+    <div class="camera-folder open" id="cam-srilanka">
+      <button class="camera-header" onclick="toggleCam('cam-srilanka')">
+        <div class="cam-left">
+          <span class="cam-num">—</span>
+          <span class="cam-name">Pentax PZ10 35MM SLR Film Camera Kit</span>
+        </div>
+        <div class="cam-right">
+          <span class="cam-count">3 photos</span>
+          <span class="cam-arrow">▼</span>
+        </div>
+      </button>
+      <div class="camera-body">
+        <div class="canon-roll-label">September 2025 · Sri Lanka</div>
+        <div class="photo-grid">
+          <div class="photo-cell">
+            <img src="F1060001.JPG" alt="Temple elephant, Kandy">
+          </div>
+          <div class="photo-cell">
+            <img src="F1060003.JPG" alt="Waterfall, Sri Lanka">
+          </div>
+          <div class="photo-cell">
+            <img src="F1070020.JPG" alt="Monkey on temple wall, jungle view">
+          </div>
+        </div>
+        <div class="folder-essay">
+          <div class="folder-essay-inner">
+            <div class="folder-essay-left">
+              <div class="folder-essay-title">Sri Lanka<br>September 2025</div>
+              <div class="folder-essay-camera">Pentax PZ10 35MM SLR Film Camera Kit</div>
+            </div>
+            <div class="essay-body">
+              <p>Two weeks in Sri Lanka. From Ella to Colombo and down to Mirissa.</p>
+              <p>What remains most vividly is the landscape. Dense and unruly. Jungle pressing against the railway line. Hills veiled in mist. Long train journeys through humid air and impossibly green valleys. The island possessed a sense of abundance that seemed to spill into everything.</p>
+              <p>The food was exceptional. Fragrant curries shared slowly. Fruit gathered from roadside stalls. Meals that felt deeply rooted in place.</p>
+              <p>I returned with a set of blue and white ceramic bowls. Their intricate patterns recalled motifs found across the island. They now sit quietly at home. A small reminder of jungle air, open train windows, and afternoons that seemed to stretch endlessly toward the sea.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMERA 3: NIKON -->
+    <div class="camera-folder open" id="cam3">
+      <button class="camera-header" onclick="toggleCam('cam3')">
+        <div class="cam-left">
+          <span class="cam-num">03</span>
+          <span class="cam-name">Nikon D200</span>
+        </div>
+        <div class="cam-right">
+          <span class="cam-count">3 photos</span>
+          <span class="cam-arrow">▼</span>
+        </div>
+      </button>
+      <div class="camera-body">
+        <div class="photo-grid">
+          <div class="photo-cell">
+            <img src="nikon-river.jpg" alt="Man by the river, Paris bridge">
+          </div>
+          <div class="photo-cell">
+            <img src="nikon-tunnel.jpg" alt="Man in geometric lattice tunnel">
+          </div>
+          <div class="photo-cell">
+            <img src="nikon-dinner.jpg" alt="Family Christmas dinner, candlelight">
+          </div>
+        </div>
+        <div class="folder-essay">
+          <div class="folder-essay-inner">
+            <div class="folder-essay-left">
+              <div class="folder-essay-title">Prague,<br>Christmas 2025</div>
+              <div class="folder-essay-camera">Nikon D200</div>
+            </div>
+            <div class="essay-body">
+              <p>Prague at Christmas. The coldest season I can recall, yet one defined by an unexpected warmth.</p>
+              <p>A collection of family, friends from home and friends from Cambridge gathered in the magnificent city. Gothic facades emerged through the winter fog. Streets glowed softly beneath the early darkness. It was a rare opportunity to spend Christmas with an unconventional collection of people, each bringing their own traditions, habits, and stories to the table.</p>
+              <p>The black and white Nikon D200 preserved much of it. Fleeting expressions, candlelit dinners, and the texture of winter lights. Small moments suspended in time and made enduring through the photograph.</p>
+            </div>
+          </div>
+        </div>
+        <div class="camera-caption">
+          <span class="caption-text">Black &amp; white · 35mm panoramic</span>
+          <span class="caption-tag">Nikon D200</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cameras -->
+
+  <footer>
+    <span class="footer-l">Film Archive · Ella · 2024</span>
+    <span class="footer-r">35mm + digital</span>
+  </footer>
+
+</div><!-- /page-ella -->
+
+
+<script>
+  const PASSWORDS = { sally: 'sally2024', willem: 'willem2024' };
+  const isUnlocked = { sally: false, willem: false };
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    document.querySelectorAll('.nav-tab').forEach(t => {
+      if (t.textContent.toLowerCase().includes(name)) t.classList.add('active');
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function unlock(name) {
+    const input = document.getElementById('pw-' + name);
+    const err = document.getElementById('err-' + name);
+    if (input.value === PASSWORDS[name]) {
+      isUnlocked[name] = true;
+      document.getElementById('gate-' + name).classList.add('hidden');
+      document.getElementById('cnt-' + name).classList.add('unlocked');
+      input.value = '';
+    } else {
+      err.classList.add('show');
+      input.value = '';
+      input.focus();
+      setTimeout(() => err.classList.remove('show'), 3000);
+    }
+  }
+
+  function toggleCam(id) {
+    document.getElementById(id).classList.toggle('open');
+  }
+</script>
+</body>
+</html>
